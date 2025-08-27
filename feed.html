@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Arcana — Feed</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css"/>
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<!-- Background -->
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<!-- Top bar -->
+<header class="topbar">
+    <a href="index.html" class="brand-mini">Arcana</a>
+    <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
+        <span class="starlines" aria-hidden="true">✹</span>
+    </button>
+</header>
+
+<!-- Drawer -->
+<aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+        <span>Library</span>
+        <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
+    </div>
+    <nav class="drawer-nav">
+        <a class="drawer-link" href="books.html"  data-icon="📚">Books (PDF)</a>
+        <a class="drawer-link" href="videos.html" data-icon="▶️">Videos (YouTube)</a>
+        <a class="drawer-link" href="feed.html"   data-icon="🌌">Feed</a>
+        <a class="drawer-link" href="email.html"  data-icon="✉️">Write to Basit</a>
+    </nav>
+</aside>
+<div id="scrim" class="scrim" hidden></div>
+
+<!-- Main -->
+<main class="wrap" style="padding-top:100px;">
+    <section class="feed-card">
+        <header class="feed-head">
+            <h1 class="feed-title">Feed</h1>
+            <p class="feed-sub">Leave a trace beneath the stars.</p>
+        </header>
+
+        <!-- Post form -->
+        <form id="post-form" class="feed-form" novalidate>
+            <div class="row">
+                <label class="field">
+                    <span class="label">Name</span>
+                    <input id="name" name="name" type="text" maxlength="80" placeholder="Who speaks?" required />
+                </label>
+                <label class="field field--full">
+                    <span class="label">Message</span>
+                    <textarea id="message" name="message" rows="3" maxlength="1000" placeholder="Share a thought, a link, a spark…" required></textarea>
+                </label>
+            </div>
+            <div class="row row--actions">
+                <button class="btn btn-primary" type="submit">Post <span class="arrow">→</span></button>
+                <small class="hint">Be kind. No edits, no deletes.</small>
+            </div>
+            <p id="post-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+    </section>
+
+    <!-- Feed list -->
+    <section class="feed-card">
+        <div class="feed-meta">Latest posts</div>
+        <ul id="feed" class="feed-list"></ul>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 Basit Azizi — All Rights Reserved</p>
+</footer>
+
+<!-- Drawer & spotlight JS (same behavior as index) -->
+<script>
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose  = document.getElementById('menuClose');
+    const drawer     = document.getElementById('drawer');
+    const scrim      = document.getElementById('scrim');
+    function openDrawer(){ drawer.classList.add('open'); scrim.hidden=false; document.body.classList.add('noscroll'); }
+    function closeDrawer(){ drawer.classList.remove('open'); scrim.hidden=true; document.body.classList.remove('noscroll'); }
+    menuToggle.addEventListener('click', openDrawer);
+    menuClose?.addEventListener('click', closeDrawer);
+    scrim?.addEventListener('click', closeDrawer);
+
+    const spot=document.getElementById('spotlight');
+    function move(x,y){ spot.style.setProperty('--x',x+'px'); spot.style.setProperty('--y',y+'px'); }
+    window.addEventListener('mousemove', e=>move(e.clientX,e.clientY));
+    window.addEventListener('touchmove', e=>{ const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+
+<!-- Firebase + Firestore -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import {
+        getFirestore, collection, addDoc, serverTimestamp,
+        query, orderBy, limit, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+    // 🔧 Use your same config
+    const firebaseConfig = {
+        apiKey: "AIzaSyAE4vZACRnEQMfokCv1i0N_CMwnONwYWf8",
+        authDomain: "arcana-4b1d0.firebaseapp.com",
+        projectId: "arcana-4b1d0",
+        storageBucket: "arcana-4b1d0.firebasestorage.app",
+        messagingSenderId: "409077089199",
+        appId: "1:409077089199:web:cae6eec3b56511bb95e55a",
+        measurementId: "G-9BM748ER4E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const postsCol = collection(db, "posts");
+
+    // DOM
+    const form   = document.getElementById('post-form');
+    const nameEl = document.getElementById('name');
+    const msgEl  = document.getElementById('message');
+    const status = document.getElementById('post-status');
+    const feedEl = document.getElementById('feed');
+
+    // Submit
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameEl.value.trim();
+        const message = msgEl.value.trim();
+        if (!name || !message) {
+            status.textContent = "Please add both name and message.";
+            return;
+        }
+        if (name.length > 80 || message.length > 1000) {
+            status.textContent = "Too long — please shorten.";
+            return;
+        }
+        status.textContent = "Posting…";
+        try {
+            await addDoc(postsCol, { name, message, createdAt: serverTimestamp() });
+            form.reset();
+            status.textContent = "Posted!";
+            status.classList.add('ok');
+            setTimeout(()=>{ status.textContent=""; status.classList.remove('ok'); }, 1200);
+        } catch (err) {
+            status.textContent = "Could not post. Check your connection.";
+        }
+    });
+
+    // Live feed (latest 50)
+    const q = query(postsCol, orderBy('createdAt','desc'), limit(50));
+    onSnapshot(q, (snap) => {
+        feedEl.innerHTML = "";
+        snap.forEach(doc => {
+            const p = doc.data();
+            const li = document.createElement('li');
+            li.className = 'post';
+            li.innerHTML = `
+          <div class="post-head">
+            <span class="post-name">${escapeHtml(p.name || "Anonymous")}</span>
+            <time class="post-time">${formatTime(p.createdAt)}</time>
+          </div>
+          <div class="post-body">${linkify(escapeHtml(p.message || ""))}</div>
+        `;
+            feedEl.appendChild(li);
+        });
+    });
+
+    // Helpers
+    function escapeHtml(s=""){
+        return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+    function linkify(text){
+        return text.replace(/(https?:\/\/[^\s]+)/g, '<a class="post-link" href="$1" target="_blank" rel="noopener">$1</a>');
+    }
+    function formatTime(ts){
+        if (!ts) return "…";
+        const d = ts.toDate ? ts.toDate() : new Date();
+        return d.toLocaleString([], {hour:'2-digit', minute:'2-digit', month:'short', day:'2-digit'});
+    }
+</script>
+</body>
+</html>

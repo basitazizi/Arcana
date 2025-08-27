@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <!-- Prevent iOS zoom-on-input by keeping font sizes >=16px; keep scalable for accessibility -->
+    <!-- Keep font-size >=16px to avoid iOS zoom on input -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Arcana — Between shadow and light</title>
 
@@ -14,7 +14,7 @@
     <meta name="color-scheme" content="dark">
 </head>
 <body>
-<!-- Background: stars & spotlight -->
+<!-- Background: stars & spotlight (no images used) -->
 <div class="sky sky--back"></div>
 <div class="sky sky--mid"></div>
 <div class="sky sky--front"></div>
@@ -28,7 +28,6 @@
 <header class="topbar">
     <a href="index.html" class="brand-mini">Arcana</a>
     <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
-        <!-- unique “philosophical” asterism icon -->
         <span class="starlines" aria-hidden="true">✹</span>
     </button>
 </header>
@@ -40,9 +39,10 @@
         <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
     </div>
     <nav class="drawer-nav">
-        <a class="drawer-link" href="books.html" data-icon="">Books (PDF)</a>
+        <a class="drawer-link" href="books.html"  data-icon="">Books (PDF)</a>
         <a class="drawer-link" href="videos.html" data-icon="">Videos (YouTube)</a>
-        <a class="drawer-link" href="email.html" data-icon="">Write to Basit</a>
+        <a class="drawer-link" href="feed.html"   data-icon="">Feed</a>
+        <a class="drawer-link" href="email.html"  data-icon="">Write to Basit</a>
     </nav>
 </aside>
 <div id="scrim" class="scrim" hidden></div>
@@ -59,21 +59,17 @@
             </a>
             <a href="books.html" class="btn btn-ghost">Books</a>
             <a href="videos.html" class="btn btn-ghost">Videos</a>
+            <a href="feed.html" class="btn btn-ghost">Feed</a>
         </div>
     </section>
 </main>
 
-<!-- Elfsight Background Music -->
-
+<!-- Elfsight Background Music | Untitled Background Music 2 -->
 <!-- Elfsight Background Music | Untitled Background Music 2 -->
 <script src="https://elfsightcdn.com/platform.js" async></script>
 <div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
 
-<!-- Optional fallback ambience (uncomment & add MP3 in /assets)
-<audio id="bg-audio" src="assets/music.mp3" loop preload="auto"></audio>
-<button id="sound-toggle" class="sound-btn">✦ Play ambience</button>
--->
-
+<!-- Drawer & spotlight -->
 <script>
     // Drawer
     const menuToggle = document.getElementById('menuToggle');
@@ -82,15 +78,13 @@
     const scrim      = document.getElementById('scrim');
 
     function openDrawer(){
-        drawer.classList.add('open');
-        scrim.hidden = false;
+        drawer.classList.add('open'); scrim.hidden = false;
         document.body.classList.add('noscroll');
         menuToggle.setAttribute('aria-expanded','true');
         drawer.setAttribute('aria-hidden','false');
     }
     function closeDrawer(){
-        drawer.classList.remove('open');
-        scrim.hidden = true;
+        drawer.classList.remove('open'); scrim.hidden = true;
         document.body.classList.remove('noscroll');
         menuToggle.setAttribute('aria-expanded','false');
         drawer.setAttribute('aria-hidden','true');
@@ -100,7 +94,7 @@
     scrim.addEventListener('click', closeDrawer);
     window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
 
-    // Spotlight that follows pointer/touch
+    // Spotlight
     const spot = document.getElementById('spotlight');
     function moveSpot(x,y){
         spot.style.setProperty('--x', x + 'px');
@@ -111,19 +105,30 @@
         const t = e.touches[0];
         if (t) moveSpot(t.clientX, t.clientY);
     }, {passive:true});
+</script>
 
-    // (Optional) fallback audio
-    /*
-    (function(){
-      const a = document.getElementById('bg-audio');
-      const b = document.getElementById('sound-toggle');
-      if(!a || !b) return;
-      a.volume = 0.6;
-      function start(){ a.play().then(()=>{ b.style.opacity='0'; setTimeout(()=>b.remove(),300); }); }
-      window.addEventListener('load', ()=>setTimeout(start,400));
-      b.addEventListener('click', start);
-    })();
-    */
+<!-- Footer -->
+<footer class="footer">
+    <p>© 2025 Basit Azizi — All Rights Reserved</p>
+</footer>
+
+<!-- Firebase init (same as before; safe to include) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAE4vZACRnEQMfokCv1i0N_CMwnONwYWf8",
+        authDomain: "arcana-4b1d0.firebaseapp.com",
+        projectId: "arcana-4b1d0",
+        storageBucket: "arcana-4b1d0.firebasestorage.app",
+        messagingSenderId: "409077089199",
+        appId: "1:409077089199:web:cae6eec3b56511bb95e55a",
+        measurementId: "G-9BM748ER4E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    try { getAnalytics(app); } catch (_) {}
 </script>
 </body>
 </html>

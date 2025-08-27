@@ -23,7 +23,10 @@
 
 <!-- Top bar -->
 <header class="topbar">
-    <a href="index.html" class="brand-mini">Arcana</a>
+    <div class="topbar-left">
+        <a href="javascript:history.back()" class="go-back" aria-label="Go back">↩</a>
+        <a href="index.html" class="brand-mini">Arcana</a>
+    </div>
     <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
         <span class="starlines" aria-hidden="true">✹</span>
     </button>
@@ -36,9 +39,9 @@
         <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
     </div>
     <nav class="drawer-nav">
-        <a class="drawer-link" href="books.html" data-icon="📚">Books (PDF)</a>
-        <a class="drawer-link" href="videos.html" data-icon="▶️">Videos (YouTube)</a>
-        <a class="drawer-link" href="email.html" data-icon="✉️">Write to us</a>
+        <a class="drawer-link" href="books.html" data-icon=>Books (PDF)</a>
+        <a class="drawer-link" href="videos.html" data-icon="">Videos (YouTube)</a>
+        <a class="drawer-link" href="email.html" data-icon="">Write to Basit</a>
     </nav>
 </aside>
 <div id="scrim" class="scrim" hidden></div>

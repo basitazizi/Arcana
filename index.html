@@ -26,12 +26,15 @@
 
 <!-- Top bar -->
 <header class="topbar">
-    <a href="index.html" class="brand-mini">Arcana</a>
+    <div class="topbar-left">
+        <a href="javascript:history.back()" class="go-back" aria-label="Go back">↩</a>
+        <a href="index.html" class="brand-mini">Arcana</a>
+    </div>
     <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
-        <!-- unique “philosophical” asterism icon -->
         <span class="starlines" aria-hidden="true">✹</span>
     </button>
 </header>
+
 
 <!-- Drawer menu -->
 <aside id="drawer" class="drawer" aria-hidden="true">
@@ -55,7 +58,7 @@
 
         <div class="cta-row">
             <a href="email.html" class="btn btn-primary">
-                Write to us <span class="arrow">→</span>
+                Write to Basit <span class="arrow">→</span>
             </a>
             <a href="books.html" class="btn btn-ghost">Books</a>
             <a href="videos.html" class="btn btn-ghost">Videos</a>

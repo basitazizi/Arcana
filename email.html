@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Arcana — Send a Thought</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
 
@@ -13,37 +12,54 @@
     <meta name="color-scheme" content="dark">
 </head>
 <body>
-<!-- Star / Nebula Layers -->
 <div class="sky sky--back"></div>
 <div class="sky sky--mid"></div>
 <div class="sky sky--front"></div>
 <div class="sky-belt"></div>
-<!-- Shooting stars -->
+<div id="spotlight"></div>
 <div class="shooting shooting--a"></div>
 <div class="shooting shooting--b"></div>
 <div class="shooting shooting--c"></div>
 
-<main class="wrap">
-    <header class="hero hero--compact">
-        <a href="index.html" class="link-underline back-link">← Home</a>
-        <h1 class="brand">Arcana</h1>
-        <p class="line">Send a thought into the night.</p>
-    </header>
+<!-- Top bar -->
+<header class="topbar">
+    <a href="index.html" class="brand-mini">Arcana</a>
+    <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
+        <span class="starlines" aria-hidden="true">✹</span>
+    </button>
+</header>
 
+<!-- Drawer menu -->
+<aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+        <span>Library</span>
+        <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
+    </div>
+    <nav class="drawer-nav">
+        <a class="drawer-link" href="books.html" data-icon="📚">Books (PDF)</a>
+        <a class="drawer-link" href="videos.html" data-icon="▶️">Videos (YouTube)</a>
+        <a class="drawer-link" href="email.html" data-icon="✉️">Write to us</a>
+    </nav>
+</aside>
+<div id="scrim" class="scrim" hidden></div>
+
+<!-- Form -->
+<main class="wrap">
     <section class="panel hover-lift" aria-label="Contact">
         <form id="arcana-form" action="https://formspree.io/f/xovnqbzn" method="POST" novalidate class="centered">
-            <!-- honeypot -->
             <input type="text" name="_gotcha" class="hp" autocomplete="off" tabindex="-1" aria-hidden="true">
 
             <div class="grid grid--center">
                 <label class="field">
                     <span class="label">Where should replies find you?</span>
-                    <input class="control control--center" type="email" name="email" placeholder="Type an address among the stars" required>
+                    <input class="control control--center" type="email" name="email" autocomplete="email"
+                           inputmode="email" placeholder="Type an address among the stars" required>
                 </label>
 
                 <label class="field field--full">
                     <span class="label">Leave a trace (optional)</span>
-                    <textarea class="control control--center" name="message" rows="4" placeholder="A question, a spark, a whisper…"></textarea>
+                    <textarea class="control control--center" name="message" rows="4"
+                              placeholder="A question, a spark, a whisper…"></textarea>
                 </label>
             </div>
 
@@ -59,51 +75,46 @@
     </section>
 </main>
 
-<!-- Elfsight Background Music (new widget) -->
-<div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
+<!-- Elfsight Background Music -->
 <script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
 
-<!-- AJAX submit (graceful fallback if JS is off) -->
 <script>
+    // Drawer
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose  = document.getElementById('menuClose');
+    const drawer     = document.getElementById('drawer');
+    const scrim      = document.getElementById('scrim');
+    function openDrawer(){ drawer.classList.add('open'); scrim.hidden=false; document.body.classList.add('noscroll'); menuToggle.setAttribute('aria-expanded','true'); drawer.setAttribute('aria-hidden','false');}
+    function closeDrawer(){ drawer.classList.remove('open'); scrim.hidden=true; document.body.classList.remove('noscroll'); menuToggle.setAttribute('aria-expanded','false'); drawer.setAttribute('aria-hidden','true');}
+    menuToggle.addEventListener('click', openDrawer);
+    menuClose.addEventListener('click', closeDrawer);
+    scrim.addEventListener('click', closeDrawer);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
+
+    // Spotlight
+    const spot = document.getElementById('spotlight');
+    const move = (x,y)=>{ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); };
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+
+    // AJAX Formspree submit
     (function () {
         const form = document.getElementById('arcana-form');
         const status = document.getElementById('form-status');
-
         async function handleSubmit(e){
             e.preventDefault();
             if (!form.email.value) { status.textContent = "Please enter an address among the stars."; return; }
             status.textContent = "Sending…";
             const data = new FormData(form);
             try {
-                const res = await fetch(form.action, {
-                    method: form.method,
-                    headers: { 'Accept': 'application/json' },
-                    body: data
-                });
-                if (res.ok) {
-                    form.reset();
-                    status.textContent = "Thank you — message received.";
-                    status.classList.add('ok');
-                } else {
-                    const json = await res.json().catch(() => ({}));
-                    status.textContent = (json && json.errors)
-                        ? json.errors.map(e => e.message).join(", ")
-                        : "Oops — something went wrong. Please try again.";
-                    status.classList.remove('ok');
-                }
-            } catch (err) {
-                status.textContent = "Network error — please check your connection.";
-                status.classList.remove('ok');
-            }
+                const res = await fetch(form.action, { method: form.method, headers: { 'Accept': 'application/json' }, body: data });
+                if (res.ok) { form.reset(); status.textContent = "Thank you — message received."; status.classList.add('ok'); }
+                else { const json = await res.json().catch(()=>({})); status.textContent = (json.errors? json.errors.map(e=>e.message).join(", ") : "Oops — something went wrong."); status.classList.remove('ok'); }
+            } catch(err){ status.textContent = "Network error — please check your connection."; status.classList.remove('ok'); }
         }
-
         form.addEventListener('submit', handleSubmit);
     })();
 </script>
-
-<noscript>
-    <style>.status{display:none}</style>
-    JavaScript is off — the form will still submit normally.
-</noscript>
 </body>
 </html>

@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <!-- Prevent iOS zoom-on-input by keeping font sizes >=16px; keep scalable for accessibility -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Arcana — Between shadow and light</title>
 
     <!-- Fonts -->
@@ -13,19 +14,42 @@
     <meta name="color-scheme" content="dark">
 </head>
 <body>
-<!-- Star / Nebula Layers -->
+<!-- Background: stars & spotlight -->
 <div class="sky sky--back"></div>
 <div class="sky sky--mid"></div>
 <div class="sky sky--front"></div>
 <div class="sky-belt"></div>
-<!-- Shooting stars -->
+<div id="spotlight"></div>
 <div class="shooting shooting--a"></div>
 <div class="shooting shooting--b"></div>
 <div class="shooting shooting--c"></div>
 
-<!-- Content -->
+<!-- Top bar -->
+<header class="topbar">
+    <a href="index.html" class="brand-mini">Arcana</a>
+    <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
+        <!-- unique “philosophical” asterism icon -->
+        <span class="starlines" aria-hidden="true">✹</span>
+    </button>
+</header>
+
+<!-- Drawer menu -->
+<aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+        <span>Library</span>
+        <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
+    </div>
+    <nav class="drawer-nav">
+        <a class="drawer-link" href="books.html" data-icon="">Books (PDF)</a>
+        <a class="drawer-link" href="videos.html" data-icon="">Videos (YouTube)</a>
+        <a class="drawer-link" href="email.html" data-icon="">Write to Basit</a>
+    </nav>
+</aside>
+<div id="scrim" class="scrim" hidden></div>
+
+<!-- Main hero -->
 <main class="wrap">
-    <header class="hero">
+    <section class="hero">
         <h1 class="brand">Arcana</h1>
         <p class="line">Between shadow and light, we seek understanding.</p>
 
@@ -33,12 +57,71 @@
             <a href="email.html" class="btn btn-primary">
                 Write to us <span class="arrow">→</span>
             </a>
+            <a href="books.html" class="btn btn-ghost">Books</a>
+            <a href="videos.html" class="btn btn-ghost">Videos</a>
         </div>
-    </header>
+    </section>
 </main>
 
-<!-- Elfsight Background Music | Untitled Background Music 2 -->
+<!-- Elfsight Background Music -->
 <script src="https://elfsightcdn.com/platform.js" async></script>
 <div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
+
+<!-- Optional fallback ambience (uncomment & add MP3 in /assets)
+<audio id="bg-audio" src="assets/music.mp3" loop preload="auto"></audio>
+<button id="sound-toggle" class="sound-btn">✦ Play ambience</button>
+-->
+
+<script>
+    // Drawer
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose  = document.getElementById('menuClose');
+    const drawer     = document.getElementById('drawer');
+    const scrim      = document.getElementById('scrim');
+
+    function openDrawer(){
+        drawer.classList.add('open');
+        scrim.hidden = false;
+        document.body.classList.add('noscroll');
+        menuToggle.setAttribute('aria-expanded','true');
+        drawer.setAttribute('aria-hidden','false');
+    }
+    function closeDrawer(){
+        drawer.classList.remove('open');
+        scrim.hidden = true;
+        document.body.classList.remove('noscroll');
+        menuToggle.setAttribute('aria-expanded','false');
+        drawer.setAttribute('aria-hidden','true');
+    }
+    menuToggle.addEventListener('click', openDrawer);
+    menuClose.addEventListener('click', closeDrawer);
+    scrim.addEventListener('click', closeDrawer);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeDrawer(); });
+
+    // Spotlight that follows pointer/touch
+    const spot = document.getElementById('spotlight');
+    function moveSpot(x,y){
+        spot.style.setProperty('--x', x + 'px');
+        spot.style.setProperty('--y', y + 'px');
+    }
+    window.addEventListener('mousemove', e => moveSpot(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        if (t) moveSpot(t.clientX, t.clientY);
+    }, {passive:true});
+
+    // (Optional) fallback audio
+    /*
+    (function(){
+      const a = document.getElementById('bg-audio');
+      const b = document.getElementById('sound-toggle');
+      if(!a || !b) return;
+      a.volume = 0.6;
+      function start(){ a.play().then(()=>{ b.style.opacity='0'; setTimeout(()=>b.remove(),300); }); }
+      window.addEventListener('load', ()=>setTimeout(start,400));
+      b.addEventListener('click', start);
+    })();
+    */
+</script>
 </body>
 </html>

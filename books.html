@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcana — Books</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<!-- Top bar -->
+<header class="topbar">
+    <a href="index.html" class="brand-mini">Arcana</a>
+    <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
+        <span class="starlines" aria-hidden="true">✹</span>
+    </button>
+</header>
+
+<!-- Drawer -->
+<aside id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+        <span>Library</span>
+        <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
+    </div>
+    <nav class="drawer-nav">
+        <a class="drawer-link" href="books.html" data-icon="">Books (PDF)</a>
+        <a class="drawer-link" href="videos.html" data-icon="️">Videos (YouTube)</a>
+        <a class="drawer-link" href="email.html" data-icon="">Write to us</a>
+    </nav>
+</aside>
+<div id="scrim" class="scrim" hidden></div>
+
+<main class="wrap wrap--top">
+    <header class="hero hero--compact">
+        <h1 class="brand">Books</h1>
+        <p class="line">A shelf beneath the night sky.</p>
+    </header>
+
+    <!-- Cards grid -->
+    <section class="grid-cards">
+        <!-- ADD HERE: duplicate <article> blocks for more books -->
+
+        <article class="card">
+            <div class="card-icon"></div>
+            <h3 class="card-title">The Metamorphosis</h3>
+            <p class="card-desc">Franz Kafka</p>
+            <a class="btn btn-card" href="The_Metamorphosis_T.pdf" download>Download PDF</a>
+        </article>
+
+        <article class="card">
+            <div class="card-icon"></div>
+            <h3 class="card-title">Atomic Habits, Summary</h3>
+            <p class="card-desc">James Clear</p>
+            <a class="btn btn-card" href="Atomic Habits.pdf" download>Download PDF</a>
+        </article>
+
+    </section>
+</main>
+
+<script>
+    // Drawer
+    const menuToggle = document.getElementById('menuToggle');
+    const menuClose  = document.getElementById('menuClose');
+    const drawer     = document.getElementById('drawer');
+    const scrim      = document.getElementById('scrim');
+    function openDrawer(){ drawer.classList.add('open'); scrim.hidden=false; document.body.classList.add('noscroll'); menuToggle.setAttribute('aria-expanded','true'); drawer.setAttribute('aria-hidden','false');}
+    function closeDrawer(){ drawer.classList.remove('open'); scrim.hidden=true; document.body.classList.remove('noscroll'); menuToggle.setAttribute('aria-expanded','false'); drawer.setAttribute('aria-hidden','true');}
+    menuToggle.addEventListener('click', openDrawer);
+    menuClose.addEventListener('click', closeDrawer);
+    scrim.addEventListener('click', closeDrawer);
+
+    // Spotlight
+    const spot = document.getElementById('spotlight');
+    const move = (x,y)=>{ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); };
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+</body>
+</html>

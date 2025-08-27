@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Arcana — Send a Thought</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<!-- Star / Nebula Layers -->
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<!-- Shooting stars -->
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<main class="wrap">
+    <header class="hero hero--compact">
+        <a href="index.html" class="link-underline back-link">← Home</a>
+        <h1 class="brand">Arcana</h1>
+        <p class="line">Send a thought into the night.</p>
+    </header>
+
+    <section class="panel hover-lift" aria-label="Contact">
+        <form id="arcana-form" action="https://formspree.io/f/xovnqbzn" method="POST" novalidate class="centered">
+            <!-- honeypot -->
+            <input type="text" name="_gotcha" class="hp" autocomplete="off" tabindex="-1" aria-hidden="true">
+
+            <div class="grid grid--center">
+                <label class="field">
+                    <span class="label">Where should replies find you?</span>
+                    <input class="control control--center" type="email" name="email" placeholder="Type an address among the stars" required>
+                </label>
+
+                <label class="field field--full">
+                    <span class="label">Leave a trace (optional)</span>
+                    <textarea class="control control--center" name="message" rows="4" placeholder="A question, a spark, a whisper…"></textarea>
+                </label>
+            </div>
+
+            <div class="actions actions--center">
+                <button class="btn btn-primary" type="submit">
+                    Send <span class="arrow">→</span>
+                </button>
+                <small class="note"><strong>This is not spam, it’s Basit’s thoughts.</strong></small>
+            </div>
+
+            <p id="form-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+    </section>
+</main>
+
+<!-- Elfsight Background Music (new widget) -->
+<div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
+<script src="https://elfsightcdn.com/platform.js" async></script>
+
+<!-- AJAX submit (graceful fallback if JS is off) -->
+<script>
+    (function () {
+        const form = document.getElementById('arcana-form');
+        const status = document.getElementById('form-status');
+
+        async function handleSubmit(e){
+            e.preventDefault();
+            if (!form.email.value) { status.textContent = "Please enter an address among the stars."; return; }
+            status.textContent = "Sending…";
+            const data = new FormData(form);
+            try {
+                const res = await fetch(form.action, {
+                    method: form.method,
+                    headers: { 'Accept': 'application/json' },
+                    body: data
+                });
+                if (res.ok) {
+                    form.reset();
+                    status.textContent = "Thank you — message received.";
+                    status.classList.add('ok');
+                } else {
+                    const json = await res.json().catch(() => ({}));
+                    status.textContent = (json && json.errors)
+                        ? json.errors.map(e => e.message).join(", ")
+                        : "Oops — something went wrong. Please try again.";
+                    status.classList.remove('ok');
+                }
+            } catch (err) {
+                status.textContent = "Network error — please check your connection.";
+                status.classList.remove('ok');
+            }
+        }
+
+        form.addEventListener('submit', handleSubmit);
+    })();
+</script>
+
+<noscript>
+    <style>.status{display:none}</style>
+    JavaScript is off — the form will still submit normally.
+</noscript>
+</body>
+</html>

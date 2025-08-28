@@ -22,12 +22,14 @@
 <div class="shooting shooting--c"></div>
 
 <!-- Top bar -->
-<header class="topbar">
-    <a href="index.html" class="brand-mini">Arcana</a>
-    <button id="menuToggle" class="menu-icon" aria-label="Open menu" aria-haspopup="true" aria-controls="drawer" aria-expanded="false">
-        <span class="starlines" aria-hidden="true">✹</span>
+<header class="topbar page">
+    <button class="back-btn" aria-label="Go back"
+            onclick="(history.length > 1) ? history.back() : (location.href='index.html')">
+        <span class="back-glyph" aria-hidden="true">↶</span>
+        <span class="back-text">Back</span>
     </button>
 </header>
+
 
 <!-- Drawer -->
 <aside id="drawer" class="drawer" aria-hidden="true">
@@ -89,4 +91,8 @@
     window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
 </script>
 </body>
+<!-- Background music (Elfsight) -->
+<script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="elfsight-app-60f17d6b-900b-4e2a-bcc6-1d637566d46c" data-elfsight-app-lazy></div>
+
 </html>

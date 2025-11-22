@@ -272,10 +272,11 @@ function saveProgress(progress) {
 
 // Allow remote sync to hydrate local progress.
 export function applyRemoteProgress({ completedIds = [], lastLessonId = null, streak = null } = {}) {
+  const local = loadProgress();
   const merged = {
-    completed: new Set(completedIds),
-    lastLessonId: lastLessonId || null,
-    streak: streak || { count: 0, lastDate: null }
+    completed: new Set([...local.completed, ...completedIds]),
+    lastLessonId: lastLessonId || local.lastLessonId || null,
+    streak: streak || local.streak || { count: 0, lastDate: null }
   };
   saveProgress(merged);
 }

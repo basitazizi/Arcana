@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcana - Lesson</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<header class="topbar page">
+    <button class="back-btn" aria-label="Go back"
+            onclick="(history.length > 1) ? history.back() : (location.href='tracks.html')">
+        <span class="back-glyph" aria-hidden="true">←</span>
+        <span class="back-text">Back</span>
+    </button>
+</header>
+
+<main class="wrap wrap--top">
+    <header class="hero hero--compact">
+        <p class="pill pill-ghost" id="lesson-track"></p>
+        <h1 class="brand" id="lesson-title">Lesson</h1>
+        <p class="line" id="lesson-blurb"></p>
+        <div class="meta-row">
+            <span class="pill" id="lesson-duration"></span>
+            <button class="btn btn-primary btn-small" id="complete-btn">Mark complete</button>
+        </div>
+    </header>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Objectives</p>
+                <h3 class="panel-title">What you will learn</h3>
+            </div>
+        </div>
+        <ul class="bullet-list" id="objectives"></ul>
+    </section>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Lesson</p>
+                <h3 class="panel-title">Read and apply</h3>
+            </div>
+        </div>
+        <div id="sections" class="section-list"></div>
+    </section>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Check yourself</p>
+                <h3 class="panel-title">Quick recall</h3>
+            </div>
+        </div>
+        <div class="quiz" id="quiz-box">
+            <p class="quiz-q">List one idea from this lesson you can practice today.</p>
+            <textarea class="textarea" id="quiz-input" placeholder="Type a short answer"></textarea>
+            <button class="btn btn-ghost btn-small" id="quiz-save">Save note locally</button>
+            <p class="muted small" id="quiz-status"></p>
+        </div>
+    </section>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Reflection</p>
+                <h3 class="panel-title">Under the stars</h3>
+            </div>
+        </div>
+        <ul class="bullet-list" id="reflection"></ul>
+    </section>
+
+    <section class="panel hover-lift" id="resources-box" hidden>
+        <div class="panel-head">
+            <div>
+                <p class="muted">Resources</p>
+                <h3 class="panel-title">Go deeper</h3>
+            </div>
+        </div>
+        <ul class="resource-list" id="resources"></ul>
+    </section>
+
+    <section class="panel hover-lift" id="next-box" hidden>
+        <div class="panel-head">
+            <div>
+                <p class="muted">Next step</p>
+                <h3 class="panel-title" id="next-title"></h3>
+            </div>
+            <a class="btn btn-primary btn-small" id="next-btn" href="#">Next lesson</a>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 Basit Azizi - All Rights Reserved</p>
+</footer>
+
+<script>
+    // Spotlight follow
+    const spot = document.getElementById('spotlight');
+    function move(x,y){ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); }
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+
+<script type="module">
+    import {
+        getLesson, getTrack, toggleLessonCompletion, isLessonComplete,
+        rememberLastLesson, getNextLesson, applyRemoteProgress
+    } from './learning-data.js';
+    import { onAuth, currentUser } from './auth.js';
+    import { recordCompletion, recordOpened, fetchProgress } from './progress-remote.js';
+
+    const params = new URLSearchParams(location.search);
+    const lessonId = params.get('lesson');
+    const lesson = getLesson(lessonId);
+
+    if (!lesson) {
+        document.querySelector('main').innerHTML = '<p class="muted">Lesson not found.</p>';
+        throw new Error('Lesson not found');
+    }
+
+    const track = getTrack(lesson.trackId);
+    rememberLastLesson(lesson.id);
+
+    document.getElementById('lesson-track').textContent = track ? track.title : 'Track';
+    document.getElementById('lesson-title').textContent = lesson.title;
+    document.getElementById('lesson-blurb').textContent = lesson.blurb || '';
+    const meta = track?.lessons.find(l => l.id === lesson.id);
+    document.getElementById('lesson-duration').textContent = meta?.duration || '';
+
+    // Objectives
+    const objList = document.getElementById('objectives');
+    (lesson.objectives || []).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        objList.appendChild(li);
+    });
+
+    // Sections
+    const sections = document.getElementById('sections');
+    (lesson.sections || []).forEach(sec => {
+        const block = document.createElement('article');
+        block.className = 'section';
+        block.innerHTML = `<h4>${sec.heading}</h4><p class="muted">${sec.body}</p>`;
+        sections.appendChild(block);
+    });
+
+    // Reflection
+    const refl = document.getElementById('reflection');
+    (lesson.reflection || []).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        refl.appendChild(li);
+    });
+
+    // Resources
+    const resBox = document.getElementById('resources-box');
+    const resList = document.getElementById('resources');
+    if (lesson.resources && lesson.resources.length) {
+        resBox.hidden = false;
+        lesson.resources.forEach(r => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a class="post-link" href="${r.url}" target="_blank" rel="noopener">${r.label}</a>`;
+            resList.appendChild(li);
+        });
+    }
+
+    // Next lesson
+    const next = getNextLesson(lesson.id);
+    if (next) {
+        document.getElementById('next-box').hidden = false;
+        document.getElementById('next-title').textContent = next.title;
+        document.getElementById('next-btn').href = `lesson.html?lesson=${next.id}`;
+    }
+
+    // Completion toggle
+    const completeBtn = document.getElementById('complete-btn');
+    function syncCompleteButton() {
+        const done = isLessonComplete(lesson.id);
+        completeBtn.textContent = done ? 'Mark as not done' : 'Mark complete';
+        completeBtn.classList.toggle('btn-primary', !done);
+        completeBtn.classList.toggle('btn-ghost', done);
+        completeBtn.classList.toggle('btn-complete', done);
+    }
+    completeBtn.addEventListener('click', async () => {
+        toggleLessonCompletion(lesson.id);
+        syncCompleteButton();
+        const user = currentUser();
+        if (user) {
+            try { await recordCompletion(user.uid, lesson.id); } catch (err) { console.error(err); }
+        }
+    });
+    syncCompleteButton();
+
+    // Quiz note (local only)
+    const quizInput = document.getElementById('quiz-input');
+    const quizStatus = document.getElementById('quiz-status');
+    const quizSave = document.getElementById('quiz-save');
+    const noteKey = `arcana.lesson.note.${lesson.id}`;
+    const existing = localStorage.getItem(noteKey);
+    if (existing) quizInput.value = existing;
+    quizSave.addEventListener('click', () => {
+        localStorage.setItem(noteKey, quizInput.value.trim());
+        quizStatus.textContent = "Saved locally.";
+        setTimeout(() => quizStatus.textContent = "", 1200);
+    });
+
+    // Remote sync for progress/streak
+    async function syncRemote(user){
+        if (!user) return;
+        try{
+            await recordOpened(user.uid, lesson.id);
+            const remote = await fetchProgress(user.uid);
+            if (remote) {
+                applyRemoteProgress(remote);
+                syncCompleteButton();
+            }
+        }catch(err){
+            console.error('Could not sync remote progress', err);
+        }
+    }
+    onAuth(syncRemote);
+    syncRemote(currentUser());
+</script>
+</body>
+</html>

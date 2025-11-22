@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcana - Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<header class="topbar page">
+    <button class="back-btn" aria-label="Go back"
+            onclick="(history.length > 1) ? history.back() : (location.href='index.html')">
+        <span class="back-glyph" aria-hidden="true">←</span>
+        <span class="back-text">Back</span>
+    </button>
+</header>
+
+<main class="wrap wrap--top">
+    <header class="hero hero--compact">
+        <h1 class="brand">Dashboard</h1>
+        <p class="line">Your study orbit: progress, streaks, and next steps.</p>
+    </header>
+
+    <section class="grid dash-grid">
+        <article class="panel hover-lift">
+            <div class="panel-head">
+                <div>
+                    <p class="muted">Overall progress</p>
+                    <h3 class="panel-title" id="overall-count">0 of 0 lessons</h3>
+                </div>
+                <div class="pill" id="streak-pill">Streak: 0</div>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" id="overall-bar" style="width:0%"></div>
+            </div>
+            <p class="muted small" id="overall-percent">0% complete across all tracks</p>
+        </article>
+
+        <article class="panel hover-lift" id="continue-card">
+            <div class="panel-head">
+                <div>
+                    <p class="muted">Continue</p>
+                    <h3 class="panel-title" id="continue-title">Pick a lesson</h3>
+                </div>
+                <span class="pill pill-ghost" id="continue-track"></span>
+            </div>
+            <p class="muted" id="continue-desc">Start with the next lesson in your track.</p>
+            <div class="panel-actions">
+                <a class="btn btn-primary" id="continue-btn" href="tracks.html">Go to tracks</a>
+                <a class="btn btn-ghost" href="tracks.html">Browse tracks</a>
+            </div>
+        </article>
+
+        <article class="panel hover-lift">
+            <div class="panel-head">
+                <div>
+                    <p class="muted">Daily prompt</p>
+                    <h3 class="panel-title">Reflect tonight</h3>
+                </div>
+            </div>
+            <ul class="bullet-list" id="prompt-list">
+                <li>What did you try to control that was never yours?</li>
+                <li>What went well that you want to repeat tomorrow?</li>
+            </ul>
+            <p class="muted small">Jot answers in your notes app or the Feed.</p>
+        </article>
+    </section>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Tracks</p>
+                <h3 class="panel-title">Choose a path</h3>
+            </div>
+        </div>
+        <div class="track-list" id="track-list"></div>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 Basit Azizi - All Rights Reserved</p>
+</footer>
+
+<script>
+    // Spotlight follow
+    const spot = document.getElementById('spotlight');
+    function move(x,y){ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); }
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+
+<script type="module">
+    import { tracks, getOverallProgress, getLastLesson, getLesson, getTrack, getCompletionForTrack, applyRemoteProgress } from './learning-data.js';
+    import { onAuth, currentUser } from './auth.js';
+    import { fetchProgress } from './progress-remote.js';
+
+    const overallCount = document.getElementById('overall-count');
+    const overallPercent = document.getElementById('overall-percent');
+    const overallBar = document.getElementById('overall-bar');
+    const streakPill = document.getElementById('streak-pill');
+    const continueTitle = document.getElementById('continue-title');
+    const continueDesc = document.getElementById('continue-desc');
+    const continueTrack = document.getElementById('continue-track');
+    const continueBtn = document.getElementById('continue-btn');
+    const listEl = document.getElementById('track-list');
+    const promptList = document.getElementById('prompt-list');
+    const sessionNote = document.createElement('p');
+    sessionNote.className = 'muted small';
+    sessionNote.id = 'session-note';
+    promptList.parentNode.insertBefore(sessionNote, promptList);
+
+    function renderProgress() {
+        const overall = getOverallProgress();
+        overallCount.textContent = `${overall.done} of ${overall.total} lessons`;
+        overallPercent.textContent = `${overall.pct}% complete across all tracks`;
+        overallBar.style.width = `${overall.pct}%`;
+        streakPill.textContent = `Streak: ${overall.streak.count || 0}`;
+
+        const last = getLastLesson();
+        if (last) {
+            const track = getTrack(last.trackId);
+            continueTitle.textContent = last.title;
+            continueDesc.textContent = last.blurb || "Pick up where you stopped.";
+            continueTrack.textContent = track ? track.title : "";
+            continueBtn.href = `lesson.html?lesson=${last.id}`;
+            continueBtn.textContent = "Resume lesson";
+        } else {
+            const firstTrack = tracks[0];
+            const firstLesson = firstTrack.lessons[0];
+            continueTitle.textContent = "Start your first lesson";
+            continueDesc.textContent = "We saved a gentle starting point.";
+            continueTrack.textContent = firstTrack.title;
+            continueBtn.href = `lesson.html?lesson=${firstLesson.id}`;
+            continueBtn.textContent = "Begin";
+        }
+
+        listEl.innerHTML = '';
+        tracks.forEach(track => {
+            const stats = getCompletionForTrack(track.id);
+            const card = document.createElement('article');
+            card.className = 'track-card';
+            card.innerHTML = `
+                <div class="track-card__top">
+                    <div>
+                        <h4 class="track-title">${track.title}</h4>
+                        <p class="muted small">${track.summary}</p>
+                    </div>
+                    <span class="pill">${stats.done}/${stats.total}</span>
+                </div>
+                <div class="progress progress--thin"><div class="progress-bar" style="width:${stats.pct}%"></div></div>
+                <div class="track-meta">
+                    <span class="pill pill-ghost">${track.level}</span>
+                    <span class="pill pill-ghost">${track.duration}</span>
+                    <a class="btn btn-ghost btn-small" href="lesson.html?lesson=${track.lessons[0].id}">View</a>
+                </div>
+            `;
+            listEl.appendChild(card);
+        });
+    }
+
+    renderProgress();
+
+    // Auth-aware sync
+    async function syncRemote(user){
+        if (!user) {
+            sessionNote.textContent = "Tip: sign in to sync streaks and progress across devices.";
+            return;
+        }
+        sessionNote.textContent = `Signed in as ${user.email || user.displayName || user.uid}`;
+        try{
+            const remote = await fetchProgress(user.uid);
+            if (remote) {
+                applyRemoteProgress(remote);
+                renderProgress();
+            }
+        }catch(err){
+            console.error('Progress sync failed', err);
+        }
+    }
+
+    onAuth(syncRemote);
+    // Also run once in case auth is already ready
+    syncRemote(currentUser());
+</script>
+</body>
+</html>

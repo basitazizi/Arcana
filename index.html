@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Arcana — Between shadow and light</title>
+    <title>Arcana - Between shadow and light</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +26,7 @@
 <!-- Top bar -->
 <header class="topbar home">
     <a href="index.html" class="brand-mini">Arcana</a>
-    <button id="menuToggle" class="menu-icon"><span class="starlines">✹</span></button>
+    <button id="menuToggle" class="menu-icon"><span class="starlines">✶</span></button>
 </header>
 
 
@@ -37,10 +37,13 @@
         <button id="menuClose" class="drawer-close" aria-label="Close menu">×</button>
     </div>
     <nav class="drawer-nav">
+        <a class="drawer-link" href="dashboard.html" data-icon="">Dashboard</a>
+        <a class="drawer-link" href="tracks.html" data-icon="">Tracks</a>
         <a class="drawer-link" href="books.html"  data-icon="">Books (PDF)</a>
         <a class="drawer-link" href="videos.html" data-icon="">Videos (YouTube)</a>
         <a class="drawer-link" href="feed.html"   data-icon="">Feed</a>
         <a class="drawer-link" href="email.html"  data-icon="">Write to Basit</a>
+        <a class="drawer-link" href="auth.html"   data-icon="">Sign in</a>
     </nav>
 </aside>
 <div id="scrim" class="scrim" hidden></div>
@@ -52,6 +55,7 @@
         <p class="line">Between shadow and light, we seek understanding.</p>
 
         <div class="cta-row">
+            <a href="dashboard.html" class="btn btn-primary">Start learning</a>
             <a href="email.html" class="btn btn-primary">Write to Basit <span class="arrow">→</span></a>
             <a href="books.html" class="btn btn-ghost">Books</a>
             <a href="videos.html" class="btn btn-ghost">Videos</a>
@@ -88,7 +92,7 @@
 <script type="module" src="firebase-init.js"></script>
 
 <footer class="footer">
-    <p>© 2025 Basit Azizi — All Rights Reserved</p>
+    <p>© 2025 Basit Azizi - All Rights Reserved</p>
 </footer>
 </body>
 </html>

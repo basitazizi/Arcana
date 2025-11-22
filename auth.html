@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcana - Sign in</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<header class="topbar page">
+    <button class="back-btn" aria-label="Go back"
+            onclick="(history.length > 1) ? history.back() : (location.href='index.html')">
+        <span class="back-glyph" aria-hidden="true">←</span>
+        <span class="back-text">Back</span>
+    </button>
+</header>
+
+<main class="wrap wrap--top">
+    <header class="hero hero--compact">
+        <h1 class="brand">Sign in</h1>
+        <p class="line">Save progress, streaks, and notes in the cloud.</p>
+    </header>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Email</p>
+                <h3 class="panel-title">Sign in or create an account</h3>
+            </div>
+        </div>
+        <form id="auth-form" class="form" autocomplete="on">
+            <div class="form-row">
+                <label for="auth-email">Email</label>
+                <input id="auth-email" class="input" type="email" autocomplete="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-row">
+                <label for="auth-pass">Password</label>
+                <input id="auth-pass" class="input" type="password" autocomplete="current-password" required placeholder="••••••••">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="login-btn">Sign in</button>
+                <button type="button" class="btn btn-ghost" id="signup-btn">Create account</button>
+            </div>
+            <p id="auth-status" class="form-note"></p>
+        </form>
+
+        <div class="form-actions" style="margin-top:8px">
+            <button type="button" class="btn btn-ghost" id="google-btn">Continue with Google</button>
+        </div>
+    </section>
+
+    <section class="panel hover-lift">
+        <div class="panel-head">
+            <div>
+                <p class="muted">Status</p>
+                <h3 class="panel-title">Current session</h3>
+            </div>
+            <button class="btn btn-ghost btn-small" id="signout-btn">Sign out</button>
+        </div>
+        <p class="muted" id="session-info">Not signed in.</p>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 Basit Azizi - All Rights Reserved</p>
+</footer>
+
+<script>
+    // Spotlight follow
+    const spot = document.getElementById('spotlight');
+    function move(x,y){ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); }
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+
+<script type="module">
+    import { onAuth, signInEmail, signUpEmail, signOutUser, signInGoogle } from './auth.js';
+
+    const form = document.getElementById('auth-form');
+    const statusEl = document.getElementById('auth-status');
+    const sessionInfo = document.getElementById('session-info');
+    const signoutBtn = document.getElementById('signout-btn');
+    const loginBtn = document.getElementById('login-btn');
+    const signupBtn = document.getElementById('signup-btn');
+    const googleBtn = document.getElementById('google-btn');
+
+    function setStatus(msg, ok=false){
+        statusEl.textContent = msg;
+        statusEl.style.color = ok ? '#c7d8ff' : 'rgba(255,255,255,.72)';
+    }
+
+    form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        setStatus("Signing in...");
+        try{
+            const email = document.getElementById('auth-email').value;
+            const pass  = document.getElementById('auth-pass').value;
+            await signInEmail(email, pass);
+            setStatus("Signed in", true);
+        }catch(err){
+            setStatus(err.message || "Could not sign in.");
+        }
+    });
+
+    signupBtn.addEventListener('click', async ()=>{
+        setStatus("Creating account...");
+        try{
+            const email = document.getElementById('auth-email').value;
+            const pass  = document.getElementById('auth-pass').value;
+            await signUpEmail(email, pass);
+            setStatus("Account created and signed in.", true);
+        }catch(err){
+            setStatus(err.message || "Could not create account.");
+        }
+    });
+
+    googleBtn.addEventListener('click', async ()=>{
+        setStatus("Opening Google...");
+        try{
+            await signInGoogle();
+            setStatus("Signed in with Google", true);
+        }catch(err){
+            setStatus(err.message || "Could not sign in with Google.");
+        }
+    });
+
+    signoutBtn.addEventListener('click', async ()=>{
+        setStatus("Signing out...");
+        await signOutUser();
+        setStatus("Signed out.", true);
+    });
+
+    onAuth((user)=>{
+        if(user){
+            sessionInfo.textContent = `Signed in as ${user.email || user.displayName || user.uid}`;
+        } else {
+            sessionInfo.textContent = "Not signed in.";
+        }
+    });
+</script>
+</body>
+</html>

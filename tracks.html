@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arcana - Tracks</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="color-scheme" content="dark">
+</head>
+<body>
+<div class="sky sky--back"></div>
+<div class="sky sky--mid"></div>
+<div class="sky sky--front"></div>
+<div class="sky-belt"></div>
+<div id="spotlight"></div>
+<div class="shooting shooting--a"></div>
+<div class="shooting shooting--b"></div>
+<div class="shooting shooting--c"></div>
+
+<header class="topbar page">
+    <button class="back-btn" aria-label="Go back"
+            onclick="(history.length > 1) ? history.back() : (location.href='index.html')">
+        <span class="back-glyph" aria-hidden="true">←</span>
+        <span class="back-text">Back</span>
+    </button>
+</header>
+
+<main class="wrap wrap--top">
+    <header class="hero hero--compact">
+        <h1 class="brand">Tracks</h1>
+        <p class="line">Curated paths with lessons you can finish in under an hour.</p>
+    </header>
+
+    <section id="tracks" class="track-grid"></section>
+</main>
+
+<footer class="footer">
+    <p>© 2025 Basit Azizi - All Rights Reserved</p>
+</footer>
+
+<script>
+    // Spotlight follow
+    const spot = document.getElementById('spotlight');
+    function move(x,y){ spot.style.setProperty('--x', x+'px'); spot.style.setProperty('--y', y+'px'); }
+    window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => { const t=e.touches[0]; if(t) move(t.clientX,t.clientY); }, {passive:true});
+</script>
+
+<script type="module">
+    import { tracks, getCompletionForTrack, isLessonComplete, applyRemoteProgress } from './learning-data.js';
+    import { onAuth, currentUser } from './auth.js';
+    import { fetchProgress } from './progress-remote.js';
+    const container = document.getElementById('tracks');
+
+    function render(){
+        container.innerHTML = '';
+        tracks.forEach(track => {
+            const stats = getCompletionForTrack(track.id);
+            const el = document.createElement('article');
+            el.className = 'panel track-panel hover-lift';
+            el.innerHTML = `
+                <div class="panel-head">
+                    <div>
+                        <p class="muted small">${track.level} • ${track.duration}</p>
+                        <h3 class="panel-title">${track.title}</h3>
+                        <p class="muted">${track.summary}</p>
+                    </div>
+                    <div class="pill">${stats.done}/${stats.total}</div>
+                </div>
+                <div class="progress progress--thin"><div class="progress-bar" style="width:${stats.pct}%"></div></div>
+                <ul class="module-list">
+                    ${track.lessons.map(lesson => {
+                        const done = isLessonComplete(lesson.id);
+                        const status = done ? '<span class="status status--done">Done</span>' : '<span class="status">Todo</span>';
+                        return `<li class="module-item">
+                            <div>
+                                <div class="module-title">${lesson.title}</div>
+                                <p class="muted small">${lesson.duration}</p>
+                            </div>
+                            <div class="module-actions">
+                                ${status}
+                                <a class="btn btn-ghost btn-small" href="lesson.html?lesson=${lesson.id}">Open</a>
+                            </div>
+                        </li>`;
+                    }).join("")}
+                </ul>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    async function syncRemote(user){
+        if (!user) { render(); return; }
+        try{
+            const remote = await fetchProgress(user.uid);
+            if (remote) applyRemoteProgress(remote);
+        }catch(err){ console.error('Progress sync failed', err); }
+        render();
+    }
+
+    onAuth(syncRemote);
+    syncRemote(currentUser());
+</script>
+</body>
+</html>

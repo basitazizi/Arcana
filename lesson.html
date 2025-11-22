@@ -69,7 +69,7 @@
         </div>
         <div class="quiz" id="quiz-box">
             <p class="quiz-q">List one idea from this lesson you can practice today.</p>
-            <textarea class="textarea" id="quiz-input" placeholder="Type a short answer"></textarea>
+            <textarea class="textarea" id="quiz-input" placeholder="Type a short answer" aria-label="Quick recall note"></textarea>
             <button class="btn btn-ghost btn-small" id="quiz-save">Save note locally</button>
             <p class="muted small" id="quiz-status"></p>
         </div>
@@ -125,6 +125,7 @@
     } from './learning-data.js';
     import { onAuth, currentUser } from './auth.js';
     import { recordCompletion, recordOpened, fetchProgress } from './progress-remote.js';
+    import { onLessonMarked } from './progress.js';
 
     const params = new URLSearchParams(location.search);
     const lessonId = params.get('lesson');
@@ -203,12 +204,16 @@
         toggleLessonCompletion(lesson.id);
         syncCompleteButton();
         completeStatus.textContent = "Saved locally.";
+        // Update UI progress immediately
+        try { onLessonMarked(); } catch (e) { console.warn(e); }
         const user = currentUser();
         if (user) {
             try { 
                 await recordCompletion(user.uid, lesson.id);
                 completeStatus.textContent = "Saved to cloud.";
-            } catch (err) { 
+                // Update UI after successful cloud save
+                try { onLessonMarked(); } catch (e) { console.warn(e); }
+            } catch (err) {
                 completeStatus.textContent = "Cloud save failed; kept locally.";
                 console.error(err); 
             }
@@ -238,6 +243,7 @@
             if (remote) {
                 applyRemoteProgress(remote);
                 syncCompleteButton();
+                try { onLessonMarked(); } catch (e) { /* ignored */ }
             }
         }catch(err){
             console.error('Could not sync remote progress', err);

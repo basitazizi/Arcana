@@ -103,9 +103,10 @@
 </script>
 
 <script type="module">
-    import { tracks, getOverallProgress, getLastLesson, getLesson, getTrack, getCompletionForTrack, applyRemoteProgress } from './learning-data.js';
+    import { tracks, getOverallProgress, getLastLesson, getTrack, getCompletionForTrack, applyRemoteProgress } from './learning-data.js';
     import { onAuth, currentUser } from './auth.js';
     import { fetchProgress } from './progress-remote.js';
+    import { updateOverallProgressUI } from './progress.js';
 
     const overallCount = document.getElementById('overall-count');
     const overallPercent = document.getElementById('overall-percent');
@@ -152,6 +153,7 @@
             const stats = getCompletionForTrack(track.id);
             const card = document.createElement('article');
             card.className = 'track-card';
+            card.dataset.trackId = track.id;
             card.innerHTML = `
                 <div class="track-card__top">
                     <div>
@@ -172,6 +174,8 @@
     }
 
     renderProgress();
+    // Ensure updateOverallProgressUI sets transitions and aria attributes correctly
+    try { updateOverallProgressUI(); } catch (e) { /* ignored */ }
 
     // Auth-aware sync
     async function syncRemote(user){
@@ -185,6 +189,8 @@
             if (remote) {
                 applyRemoteProgress(remote);
                 renderProgress();
+                // refresh UI after applying remote progress
+                try { updateOverallProgressUI(); } catch (e) { /* ignored */ }
             }
         }catch(err){
             console.error('Progress sync failed', err);

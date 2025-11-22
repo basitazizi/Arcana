@@ -36,6 +36,7 @@
         <div class="meta-row">
             <span class="pill" id="lesson-duration"></span>
             <button class="btn btn-primary btn-small" id="complete-btn">Mark complete</button>
+            <p id="complete-status" class="muted small" style="margin:0;"></p>
         </div>
     </header>
 
@@ -190,6 +191,7 @@
 
     // Completion toggle
     const completeBtn = document.getElementById('complete-btn');
+    const completeStatus = document.getElementById('complete-status');
     function syncCompleteButton() {
         const done = isLessonComplete(lesson.id);
         completeBtn.textContent = done ? 'Mark as not done' : 'Mark complete';
@@ -200,9 +202,16 @@
     completeBtn.addEventListener('click', async () => {
         toggleLessonCompletion(lesson.id);
         syncCompleteButton();
+        completeStatus.textContent = "Saved locally.";
         const user = currentUser();
         if (user) {
-            try { await recordCompletion(user.uid, lesson.id); } catch (err) { console.error(err); }
+            try { 
+                await recordCompletion(user.uid, lesson.id);
+                completeStatus.textContent = "Saved to cloud.";
+            } catch (err) { 
+                completeStatus.textContent = "Cloud save failed; kept locally.";
+                console.error(err); 
+            }
         }
     });
     syncCompleteButton();

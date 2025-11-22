@@ -25,11 +25,24 @@ function nextStreak(current) {
 export async function fetchProgress(uid) {
   if (!uid) return null;
   const userRef = doc(db, 'userprogress', uid);
+  const userDoc = await getDoc(userRef);
+
+  // Bootstrap an empty profile so new accounts have a place to store streaks/progress.
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      streakCount: 0,
+      lastActiveDate: null,
+      lastLessonId: null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
   const snap = await getDocs(collection(userRef, 'progress'));
   const completedIds = [];
   snap.forEach(d => { if (d.data()?.completed) completedIds.push(d.id); });
-  const userDoc = await getDoc(userRef);
-  const userData = userDoc.exists() ? userDoc.data() : {};
+  const refreshed = userDoc.exists() ? userDoc : await getDoc(userRef);
+  const userData = refreshed.exists() ? refreshed.data() : {};
   return {
     completedIds,
     lastLessonId: userData.lastLessonId || null,
